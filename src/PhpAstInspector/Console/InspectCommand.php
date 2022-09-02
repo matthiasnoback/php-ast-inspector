@@ -51,7 +51,7 @@ final class InspectCommand extends Command
     {
         $this->output = $output;
         $this->output->getFormatter()
-            ->setStyle(CodeFormatter::HIGHLIGHT_TAG, new OutputFormatterStyle('', '', ['bold']));
+            ->setStyle(CodeFormatter::HIGHLIGHT_TAG, new OutputFormatterStyle('yellow', '', ['bold']));
         $this->output->getFormatter()
             ->setStyle(CodeFormatter::LINE_NUMBER_TAG, new OutputFormatterStyle('gray', '', []));
 
