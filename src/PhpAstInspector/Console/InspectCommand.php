@@ -58,7 +58,7 @@ final class InspectCommand extends Command
         $fileArgument = $input->getArgument('file');
         assert(is_string($fileArgument));
         $code = file_get_contents($fileArgument);
-        if (!is_string($code)) {
+        if (! is_string($code)) {
             throw new RuntimeException('Could not read file: ' . $fileArgument);
         }
 

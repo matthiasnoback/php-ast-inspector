@@ -1,0 +1,6 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Calling PHPStan\\\\Parser\\\\RichParser\\:\\:parseString\\(\\) is not covered by backward compatibility promise\\. The method might change in a minor PHPStan version\\.$#"
+			count: 1
+			path: src/PhpAstInspector/PhpParser/Parser.php

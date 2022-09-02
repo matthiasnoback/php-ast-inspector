@@ -1,0 +1,5 @@
+services:
+    currentPhpVersionLexer:
+        class: PhpParser\Lexer
+        factory: \PhpAstInspector\PhpParser\Parser::createLexer()
+        autowired: false

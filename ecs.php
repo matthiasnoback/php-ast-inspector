@@ -16,6 +16,12 @@ return static function (
             __DIR__ . '/src',
         ]
     );
+    $parameters->set(
+        Option::SKIP,
+        [
+            PhpCsFixer\Fixer\PhpUnit\PhpUnitStrictFixer::class
+        ]
+    );
 
     $containerConfigurator->import(SetList::CONTROL_STRUCTURES);
     $containerConfigurator->import(SetList::PSR_12);
