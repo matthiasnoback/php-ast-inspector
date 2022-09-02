@@ -1,0 +1,21 @@
+version: "3"
+services:
+    php:
+        build: docker/php/
+        image: matthiasnoback/php-ast-inspector-php
+        working_dir: /opt
+        volumes:
+            - ./:/opt
+        entrypoint: php
+        user: ${HOST_UID}:${HOST_GID}
+        env_file:
+            - .env
+        init: true
+
+    composer:
+        image: composer:latest
+        volumes:
+            - ./:/app
+        user: ${HOST_UID}:${HOST_GID}
+        env_file:
+            - .env
