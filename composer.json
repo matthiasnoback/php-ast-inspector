@@ -22,5 +22,5 @@
             "phpstan/extension-installer": true
         }
     },
-    "bin": ["composer-bin/phpstan-inspect"]
+    "bin": ["composer-bin/ast-inspect"]
 }
