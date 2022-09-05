@@ -18,4 +18,4 @@ Run `ast-inspect` by pointing it at a script that you want to inspect, e.g. if y
 vendor/bin/ast-inspect inspect file.php
 ```
 
-Now use the keys (`a`, `s`, `d`, `w`, followed by `Enter`) to navigate the node tree. Quit using `q` or `Ctrl + C`.
+Now use the keys (`a`, `s`, `d`, `w`, followed by `Enter`) to navigate the node tree. Quit using `Ctrl + C`.

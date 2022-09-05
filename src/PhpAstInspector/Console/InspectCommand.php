@@ -28,8 +28,6 @@ final class InspectCommand extends Command
 
     private RenderNodeInfo $renderNodeInfo;
 
-    private NavigateToNode $navigateToNode;
-
     public function __construct()
     {
         parent::__construct();
@@ -37,10 +35,6 @@ final class InspectCommand extends Command
         $this->codeFormatter = new CodeFormatter();
         $this->parser = new Parser();
         $this->renderNodeInfo = new RenderNodeInfo(new GetNodeInfo());
-
-        $questionHelper = $this->getHelper('question');
-        assert($questionHelper instanceof QuestionHelper);
-        $this->navigateToNode = new NavigateToNode($questionHelper);
     }
 
     protected function configure(): void
@@ -53,6 +47,10 @@ final class InspectCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         assert($output instanceof ConsoleOutputInterface);
+
+        $questionHelper = $this->getHelper('crap');
+        assert($questionHelper instanceof QuestionHelper);
+        $navigateToNode = new NavigateToNode($questionHelper);
 
         $this->registerStyles($output);
 
@@ -73,7 +71,7 @@ final class InspectCommand extends Command
         while (true) {
             $this->printCodeWithHighlightedNode($code, $navigator->currentNode(), $codeSection, $infoSection);
 
-            $navigator = $this->navigateToNode->basedOnUserInput($navigator, $input, $questionSection);
+            $navigator = $navigateToNode->basedOnUserInput($navigator, $input, $questionSection);
         }
     }
 
