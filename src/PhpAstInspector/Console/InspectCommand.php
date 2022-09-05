@@ -16,8 +16,13 @@ use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\Question;
 
 final class InspectCommand extends Command
 {
@@ -25,11 +30,11 @@ final class InspectCommand extends Command
 
     private CodeFormatter $codeFormatter;
 
-    private OutputInterface $output;
-
     private Parser $parser;
 
     private GetNodeInfo $getNodeInfo;
+    private ConsoleSectionOutput $codeSection;
+    private ConsoleSectionOutput $infoSection;
 
     public function __construct()
     {
@@ -49,11 +54,25 @@ final class InspectCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->output = $output;
-        $this->output->getFormatter()
+        if (!$output instanceof ConsoleOutputInterface) {
+            throw new \LogicException('This command accepts only an instance of "ConsoleOutputInterface".');
+        }
+
+        $output->getFormatter()
             ->setStyle(CodeFormatter::HIGHLIGHT_TAG, new OutputFormatterStyle('yellow', '', ['bold']));
-        $this->output->getFormatter()
+        $output->getFormatter()
             ->setStyle(CodeFormatter::LINE_NUMBER_TAG, new OutputFormatterStyle('gray', '', []));
+        $output->getFormatter()
+            ->setStyle('choice', new OutputFormatterStyle('', '', ['bold']));
+        $output->getFormatter()
+            ->setStyle('subnode', new OutputFormatterStyle('yellow', '', []));
+        $output->getFormatter()
+            ->setStyle('current_node', new OutputFormatterStyle('green', '', []));
+
+        $output->setErrorOutput(new NullOutput());
+        $this->codeSection = $output->section();
+        $this->infoSection = $output->section();
+        $questionSection = $output->section();
 
         $fileArgument = $input->getArgument('file');
         assert(is_string($fileArgument));
@@ -74,25 +93,26 @@ final class InspectCommand extends Command
             $choices = [];
 
             if ($navigator->hasNextNode()) {
-                $choices['d'] = 'next node';
+                $choices['d'] = '<choice>d</choice> = next node';
             }
             if ($navigator->hasPreviousNode()) {
-                $choices['a'] = 'previous node';
+                $choices['a'] = '<choice>a</choice> = previous node';
             }
             if ($navigator->hasParentNode()) {
-                $choices['s'] = 'parent node';
+                $choices['s'] = '<choice>s</choice> = parent node';
             }
             if ($navigator->hasSubnode()) {
-                $choices['w'] = 'inspect subnodes';
+                $choices['w'] = '<choice>w</choice> = inspect subnodes';
             }
 
-            $choices['q'] = 'quit';
+            $choices['q'] = '<choice>q</choice> = quit';
 
             $nextAction = $questionHelper->ask(
                 $input,
-                $output,
-                new ChoiceQuestion('<question>Next?</question>', $choices)
+                $questionSection,
+                new Question('<question>Next?</question> (' . implode(', ', $choices) . ')')
             );
+            $questionSection->clear();
             if ($nextAction === 'q') {
                 return 0;
             } elseif ($nextAction === 'd') {
@@ -111,21 +131,22 @@ final class InspectCommand extends Command
 
     private function printCodeWithHighlightedNode(string $code, Node $node): void
     {
-        $this->output->write(
-            $this->codeFormatter->format($code, Highlight::createForPhpParserNode($node)) . "\n\n"
+        $this->codeSection->overwrite(
+            $this->codeFormatter->format($code, Highlight::createForPhpParserNode($node)) . "\n"
         );
 
+        $tempOutput = new BufferedOutput();
         $breadcrumbs = (new NodeNavigator($node))->breadcrumbs();
-        $breadcrumbs[count($breadcrumbs) - 1] = '<info>' . $breadcrumbs[count($breadcrumbs) - 1] . '</info>';
-        $this->output->writeln('Current node: ' . implode(' > ', $breadcrumbs) . "\n");
+        $breadcrumbs[count($breadcrumbs) - 1] = '<current_node>' . $breadcrumbs[count($breadcrumbs) - 1] . '</current_node>';
+        $tempOutput->writeln('Current node: ' . implode(' > ', $breadcrumbs) . "\n");
 
-        $table = new Table($this->output);
+        $table = new Table($tempOutput);
         $table->setStyle('compact');
         $nodeInfo = $this->getNodeInfo->forNode($node);
         foreach ($nodeInfo as $key => $value) {
-            $table->addRow(['<comment>' . $key . '</comment>', $value]);
+            $table->addRow(['<subnode>' . $key . '</subnode>', $value]);
         }
         $table->render();
-        $this->output->writeln('');
+        $this->infoSection->overwrite($tempOutput->fetch());
     }
 }
