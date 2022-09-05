@@ -13,15 +13,11 @@ use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\QuestionHelper;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
-use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 
 final class InspectCommand extends Command
@@ -32,9 +28,7 @@ final class InspectCommand extends Command
 
     private Parser $parser;
 
-    private GetNodeInfo $getNodeInfo;
-    private ConsoleSectionOutput $codeSection;
-    private ConsoleSectionOutput $infoSection;
+    private RenderNodeInfo $renderNodeInfo;
 
     public function __construct()
     {
@@ -42,7 +36,7 @@ final class InspectCommand extends Command
 
         $this->codeFormatter = new CodeFormatter();
         $this->parser = new Parser();
-        $this->getNodeInfo = new GetNodeInfo();
+        $this->renderNodeInfo = new RenderNodeInfo(new GetNodeInfo());
     }
 
     protected function configure(): void
@@ -54,9 +48,7 @@ final class InspectCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$output instanceof ConsoleOutputInterface) {
-            throw new \LogicException('This command accepts only an instance of "ConsoleOutputInterface".');
-        }
+        assert($output instanceof ConsoleOutputInterface);
 
         $output->getFormatter()
             ->setStyle(CodeFormatter::HIGHLIGHT_TAG, new OutputFormatterStyle('yellow', '', ['bold']));
@@ -69,9 +61,8 @@ final class InspectCommand extends Command
         $output->getFormatter()
             ->setStyle('current_node', new OutputFormatterStyle('green', '', []));
 
-        $output->setErrorOutput(new NullOutput());
-        $this->codeSection = $output->section();
-        $this->infoSection = $output->section();
+        $codeSection = $output->section();
+        $infoSection = $output->section();
         $questionSection = $output->section();
 
         $fileArgument = $input->getArgument('file');
@@ -81,72 +72,77 @@ final class InspectCommand extends Command
             throw new RuntimeException('Could not read file: ' . $fileArgument);
         }
 
-        /** @var QuestionHelper $questionHelper */
-        $questionHelper = $this->getHelper('question');
-
         $nodes = $this->parser->parse($code);
         $navigator = NodeNavigator::selectFirstFrom($nodes);
 
         while (true) {
-            $this->printCodeWithHighlightedNode($code, $navigator->currentNode());
+            $this->printCodeWithHighlightedNode($code, $navigator->currentNode(), $codeSection, $infoSection);
 
-            $choices = [];
-
-            if ($navigator->hasNextNode()) {
-                $choices['d'] = '<choice>d</choice> = next node';
-            }
-            if ($navigator->hasPreviousNode()) {
-                $choices['a'] = '<choice>a</choice> = previous node';
-            }
-            if ($navigator->hasParentNode()) {
-                $choices['s'] = '<choice>s</choice> = parent node';
-            }
-            if ($navigator->hasSubnode()) {
-                $choices['w'] = '<choice>w</choice> = inspect subnodes';
-            }
-
-            $choices['q'] = '<choice>q</choice> = quit';
-
-            $nextAction = $questionHelper->ask(
-                $input,
-                $questionSection,
-                new Question('<question>Next?</question> (' . implode(', ', $choices) . ')')
-            );
-            $questionSection->clear();
-            if ($nextAction === 'q') {
-                return 0;
-            } elseif ($nextAction === 'd') {
-                $navigator = $navigator->navigateToNextNode();
-            } elseif ($nextAction === 'a') {
-                $navigator = $navigator->navigateToPreviousNode();
-            } elseif ($nextAction === 'w') {
-                $navigator = $navigator->navigateToFirstSubnode();
-            } elseif ($nextAction === 's') {
-                $navigator = $navigator->navigateToParentNode();
-            } else {
-                throw new LogicException('Action not supported: ' . $nextAction);
-            }
+            $navigator = $this->askForNextMove($navigator, $input, $questionSection);
         }
     }
 
-    private function printCodeWithHighlightedNode(string $code, Node $node): void
-    {
-        $this->codeSection->overwrite(
+    private function printCodeWithHighlightedNode(
+        string $code,
+        Node $node,
+        ConsoleSectionOutput $codeSection,
+        ConsoleSectionOutput $infoSection
+    ): void {
+        $codeSection->overwrite(
             $this->codeFormatter->format($code, Highlight::createForPhpParserNode($node)) . "\n"
         );
 
-        $tempOutput = new BufferedOutput();
-        $breadcrumbs = (new NodeNavigator($node))->breadcrumbs();
-        $breadcrumbs[count($breadcrumbs) - 1] = '<current_node>' . $breadcrumbs[count($breadcrumbs) - 1] . '</current_node>';
-        $tempOutput->writeln('Current node: ' . implode(' > ', $breadcrumbs) . "\n");
+        $infoSection->overwrite($this->renderNodeInfo->forNode($node));
+    }
 
-        $table = new Table($tempOutput);
-        $table->setStyle('compact');
-        $nodeInfo = $this->getNodeInfo->forNode($node);
-        foreach ($nodeInfo as $key => $value) {
-            $table->addRow(['<subnode>' . $key . '</subnode>', $value]);
+    private function askForNextMove(
+        NodeNavigator $navigator,
+        InputInterface $input,
+        ConsoleSectionOutput $outputSection
+    ): NodeNavigator {
+        $choices = [];
+
+        if ($navigator->hasNextNode()) {
+            $choices[] = '<choice>d</choice> = next node';
         }
-        $table->render();
-        $this->infoSection->overwrite($tempOutput->fetch());
+        if ($navigator->hasPreviousNode()) {
+            $choices[] = '<choice>a</choice> = previous node';
+        }
+        if ($navigator->hasParentNode()) {
+            $choices[] = '<choice>s</choice> = parent node';
+        }
+        if ($navigator->hasSubnode()) {
+            $choices[] = '<choice>w</choice> = inspect subnodes';
+        }
+
+        $choices[] = '<choice>Ctrl + C</choice> = quit';
+
+        $nextAction = $this->questionHelper()
+            ->ask(
+                $input,
+                $outputSection,
+                new Question('<question>Next?</question> (' . implode(', ', $choices) . ')')
+            );
+        $outputSection->clear();
+
+        if ($nextAction === 'd') {
+            return $navigator->navigateToNextNode();
+        } elseif ($nextAction === 'a') {
+            return $navigator->navigateToPreviousNode();
+        } elseif ($nextAction === 'w') {
+            return $navigator->navigateToFirstSubnode();
+        } elseif ($nextAction === 's') {
+            return $navigator->navigateToParentNode();
+        }
+
+        throw new LogicException('Action not supported: ' . $nextAction);
+    }
+
+    private function questionHelper(): QuestionHelper
+    {
+        $questionHelper = $this->getHelper('question');
+        assert($questionHelper instanceof QuestionHelper);
+
+        return $questionHelper;
     }
 }
