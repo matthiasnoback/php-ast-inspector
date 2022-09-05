@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace PhpAstInspector\PhpParser;
 
+use PhpParser\Lexer;
 use PhpParser\Lexer\Emulative;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NodeConnectingVisitor;
-use PHPStan\DependencyInjection\ContainerFactory;
-use PHPStan\Parser\RichParser;
+use PhpParser\ParserFactory;
+use RuntimeException;
 
 final class Parser
 {
@@ -18,15 +19,13 @@ final class Parser
      */
     public function parse(string $code): array
     {
-        $currentWorkingDirectory = getcwd();
-        assert(is_string($currentWorkingDirectory));
-        $containerFactory = new ContainerFactory($currentWorkingDirectory);
-        $container = $containerFactory->create(sys_get_temp_dir(), [__DIR__ . '/config.neon'], []);
+        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, self::createLexer());
 
-        /** @var RichParser $parser */
-        $parser = $container->getService('currentPhpVersionRichParser');
+        $nodes = $parser->parse($code);
 
-        $nodes = $parser->parseString($code);
+        if ($nodes === null) {
+            throw new RuntimeException('Parser returned no nodes');
+        }
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NodeConnectingVisitor());
@@ -35,7 +34,7 @@ final class Parser
         return $nodes;
     }
 
-    public static function createLexer(): Emulative
+    private static function createLexer(): Lexer
     {
         return new Emulative([
             'usedAttributes' => ['startFilePos', 'endFilePos'],

@@ -48,7 +48,7 @@ final class InspectCommand extends Command
     {
         assert($output instanceof ConsoleOutputInterface);
 
-        $questionHelper = $this->getHelper('crap');
+        $questionHelper = $this->getHelper('question');
         assert($questionHelper instanceof QuestionHelper);
         $navigateToNode = new NavigateToNode($questionHelper);
 
