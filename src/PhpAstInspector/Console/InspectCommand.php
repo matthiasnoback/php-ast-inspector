@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAstInspector\Console;
 
-use LogicException;
 use PhpAstInspector\PhpParser\GetNodeInfo;
 use PhpAstInspector\PhpParser\NodeNavigator;
 use PhpAstInspector\PhpParser\Parser;
@@ -18,19 +17,18 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\Question;
 
 final class InspectCommand extends Command
 {
     public const COMMAND_NAME = 'inspect';
-
-    private const CHOICE_TAG = 'choice';
 
     private CodeFormatter $codeFormatter;
 
     private Parser $parser;
 
     private RenderNodeInfo $renderNodeInfo;
+
+    private NavigateToNode $navigateToNode;
 
     public function __construct()
     {
@@ -39,6 +37,10 @@ final class InspectCommand extends Command
         $this->codeFormatter = new CodeFormatter();
         $this->parser = new Parser();
         $this->renderNodeInfo = new RenderNodeInfo(new GetNodeInfo());
+
+        $questionHelper = $this->getHelper('question');
+        assert($questionHelper instanceof QuestionHelper);
+        $this->navigateToNode = new NavigateToNode($questionHelper);
     }
 
     protected function configure(): void
@@ -52,16 +54,7 @@ final class InspectCommand extends Command
     {
         assert($output instanceof ConsoleOutputInterface);
 
-        $output->getFormatter()
-            ->setStyle(CodeFormatter::HIGHLIGHT_TAG, new OutputFormatterStyle('yellow', '', ['bold']));
-        $output->getFormatter()
-            ->setStyle(CodeFormatter::LINE_NUMBER_TAG, new OutputFormatterStyle('gray', '', []));
-        $output->getFormatter()
-            ->setStyle(self::CHOICE_TAG, new OutputFormatterStyle('', '', ['bold']));
-        $output->getFormatter()
-            ->setStyle(RenderNodeInfo::SUBNODE_TAG, new OutputFormatterStyle('yellow', '', []));
-        $output->getFormatter()
-            ->setStyle(RenderNodeInfo::CURRENT_NODE_TAG, new OutputFormatterStyle('green', '', []));
+        $this->registerStyles($output);
 
         $codeSection = $output->section();
         $infoSection = $output->section();
@@ -80,7 +73,7 @@ final class InspectCommand extends Command
         while (true) {
             $this->printCodeWithHighlightedNode($code, $navigator->currentNode(), $codeSection, $infoSection);
 
-            $navigator = $this->askForNextMove($navigator, $input, $questionSection);
+            $navigator = $this->navigateToNode->basedOnUserInput($navigator, $input, $questionSection);
         }
     }
 
@@ -97,54 +90,17 @@ final class InspectCommand extends Command
         $infoSection->overwrite($this->renderNodeInfo->forNode($node));
     }
 
-    private function askForNextMove(
-        NodeNavigator $navigator,
-        InputInterface $input,
-        ConsoleSectionOutput $outputSection
-    ): NodeNavigator {
-        $choices = [];
-
-        if ($navigator->hasNextNode()) {
-            $choices[] = '<choice>d</choice> = next node';
-        }
-        if ($navigator->hasPreviousNode()) {
-            $choices[] = '<choice>a</choice> = previous node';
-        }
-        if ($navigator->hasParentNode()) {
-            $choices[] = '<choice>s</choice> = parent node';
-        }
-        if ($navigator->hasSubnode()) {
-            $choices[] = '<choice>w</choice> = inspect subnodes';
-        }
-
-        $choices[] = '<choice>Ctrl + C</choice> = quit';
-
-        $nextAction = $this->questionHelper()
-            ->ask(
-                $input,
-                $outputSection,
-                new Question('<question>Next?</question> (' . implode(', ', $choices) . ')')
-            );
-        $outputSection->clear();
-
-        if ($nextAction === 'd') {
-            return $navigator->navigateToNextNode();
-        } elseif ($nextAction === 'a') {
-            return $navigator->navigateToPreviousNode();
-        } elseif ($nextAction === 'w') {
-            return $navigator->navigateToFirstSubnode();
-        } elseif ($nextAction === 's') {
-            return $navigator->navigateToParentNode();
-        }
-
-        throw new LogicException('Action not supported: ' . $nextAction);
-    }
-
-    private function questionHelper(): QuestionHelper
+    private function registerStyles(OutputInterface $output): void
     {
-        $questionHelper = $this->getHelper('question');
-        assert($questionHelper instanceof QuestionHelper);
-
-        return $questionHelper;
+        $output->getFormatter()
+            ->setStyle(CodeFormatter::HIGHLIGHT_TAG, new OutputFormatterStyle('yellow', '', ['bold']));
+        $output->getFormatter()
+            ->setStyle(CodeFormatter::LINE_NUMBER_TAG, new OutputFormatterStyle('gray', '', []));
+        $output->getFormatter()
+            ->setStyle(NavigateToNode::CHOICE_TAG, new OutputFormatterStyle('', '', ['bold']));
+        $output->getFormatter()
+            ->setStyle(RenderNodeInfo::SUBNODE_TAG, new OutputFormatterStyle('yellow', '', []));
+        $output->getFormatter()
+            ->setStyle(RenderNodeInfo::CURRENT_NODE_TAG, new OutputFormatterStyle('green', '', []));
     }
 }
