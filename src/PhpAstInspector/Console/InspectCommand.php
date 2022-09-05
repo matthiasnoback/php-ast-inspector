@@ -24,6 +24,8 @@ final class InspectCommand extends Command
 {
     public const COMMAND_NAME = 'inspect';
 
+    private const CHOICE_TAG = 'choice';
+
     private CodeFormatter $codeFormatter;
 
     private Parser $parser;
@@ -55,11 +57,11 @@ final class InspectCommand extends Command
         $output->getFormatter()
             ->setStyle(CodeFormatter::LINE_NUMBER_TAG, new OutputFormatterStyle('gray', '', []));
         $output->getFormatter()
-            ->setStyle('choice', new OutputFormatterStyle('', '', ['bold']));
+            ->setStyle(self::CHOICE_TAG, new OutputFormatterStyle('', '', ['bold']));
         $output->getFormatter()
-            ->setStyle('subnode', new OutputFormatterStyle('yellow', '', []));
+            ->setStyle(RenderNodeInfo::SUBNODE_TAG, new OutputFormatterStyle('yellow', '', []));
         $output->getFormatter()
-            ->setStyle('current_node', new OutputFormatterStyle('green', '', []));
+            ->setStyle(RenderNodeInfo::CURRENT_NODE_TAG, new OutputFormatterStyle('green', '', []));
 
         $codeSection = $output->section();
         $infoSection = $output->section();

@@ -12,6 +12,10 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 final class RenderNodeInfo
 {
+    public const CURRENT_NODE_TAG = 'current_node';
+
+    public const SUBNODE_TAG = 'subnode';
+
     public function __construct(
         private readonly GetNodeInfo $getNodeInfo
     ) {
@@ -21,16 +25,18 @@ final class RenderNodeInfo
     {
         $tempOutput = new BufferedOutput();
         $breadcrumbs = (new NodeNavigator($node))->breadcrumbs();
-        $breadcrumbs[count($breadcrumbs) - 1] = '<current_node>' . $breadcrumbs[count(
-            $breadcrumbs
-        ) - 1] . '</current_node>';
+        $breadcrumbs[count($breadcrumbs) - 1] = sprintf(
+            '<%1$s>%2$s</%1$s>',
+            self::CURRENT_NODE_TAG,
+            $breadcrumbs[array_key_last($breadcrumbs)]
+        );
         $tempOutput->writeln('Current node: ' . implode(' > ', $breadcrumbs) . "\n");
 
         $table = new Table($tempOutput);
         $table->setStyle('compact');
         $nodeInfo = $this->getNodeInfo->forNode($node);
         foreach ($nodeInfo as $key => $value) {
-            $table->addRow(['<subnode>' . $key . '</subnode>', $value]);
+            $table->addRow([sprintf('<%1$s>%2$s</%1$s>', self::SUBNODE_TAG, $key), $value]);
         }
         $table->render();
 
