@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PhpAstInspector\Console;
@@ -18,7 +19,11 @@ final class IntegrationTest extends TestCase
         self::assertStringContainsString('Hello, world!', $process->getOutput(), $process->getErrorOutput());
 
         // Info section
-        self::assertStringContainsString('PhpParser\Node\Stmt\Declare_', $process->getOutput(), $process->getErrorOutput());
+        self::assertStringContainsString(
+            'PhpParser\Node\Stmt\Declare_',
+            $process->getOutput(),
+            $process->getErrorOutput()
+        );
 
         // Question section
         self::assertStringContainsString('Next?', $process->getOutput(), $process->getErrorOutput());

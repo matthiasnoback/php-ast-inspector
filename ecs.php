@@ -14,6 +14,7 @@ return static function (
         Option::PATHS,
         [
             __DIR__ . '/src',
+            __DIR__ . '/utils',
         ]
     );
     $parameters->set(

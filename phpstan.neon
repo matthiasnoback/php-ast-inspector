@@ -5,3 +5,8 @@ parameters:
     level: max
     paths:
         - src
+        - utils
+    excludePaths:
+        - utils/PHPStan/tests/GetHelperRule/Fixtures
+rules:
+    - Utils\PHPStan\GetHelperRule
