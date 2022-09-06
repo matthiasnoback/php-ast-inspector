@@ -53,6 +53,10 @@ final class GetHelperRule implements Rule
             return [];
         }
 
-        return [RuleErrorBuilder::message('getHelper() should not be called in the constructor')->build()];
+        return [
+            RuleErrorBuilder::message(
+                'getHelper() should not be called in the constructor because helpers have not been registered at that point'
+            )->build(),
+        ];
     }
 }

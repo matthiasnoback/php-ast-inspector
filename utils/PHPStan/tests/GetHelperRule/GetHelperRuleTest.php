@@ -16,7 +16,10 @@ final class GetHelperRuleTest extends RuleTestCase
     {
         $this->analyse(
             [__DIR__ . '/Fixtures/CallsGetHelperInConstructor.php'],
-            [['getHelper() should not be called in the constructor', 13]]
+            [[
+                'getHelper() should not be called in the constructor because helpers have not been registered at that point',
+                13,
+            ]]
         );
     }
 
