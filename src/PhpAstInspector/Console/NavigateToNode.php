@@ -50,16 +50,12 @@ final class NavigateToNode
 
         $outputSection->clear();
 
-        if ($nextAction === 'd') {
-            return $navigator->navigateToNextNode();
-        } elseif ($nextAction === 'a') {
-            return $navigator->navigateToPreviousNode();
-        } elseif ($nextAction === 'w') {
-            return $navigator->navigateToFirstSubnode();
-        } elseif ($nextAction === 's') {
-            return $navigator->navigateToParentNode();
-        }
-
-        throw new LogicException('Action not supported: ' . $nextAction);
+        return match($nextAction) {
+            'd' => $navigator->navigateToNextNode(),
+            'a' => $navigator->navigateToPreviousNode(),
+            'w' => $navigator->navigateToFirstSubnode(),
+            's' => $navigator->navigateToParentNode(),
+            default => throw new LogicException('Action not supported: ' . $nextAction),
+        };
     }
 }
