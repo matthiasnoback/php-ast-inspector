@@ -9,8 +9,8 @@ use PhpParser\Node;
 final class Highlight
 {
     public function __construct(
-        public int $startPosition,
-        public int $endPosition,
+        public readonly int $startPosition,
+        public readonly int $endPosition,
     ) {
     }
 
