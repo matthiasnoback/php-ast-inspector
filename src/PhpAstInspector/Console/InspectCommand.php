@@ -22,11 +22,11 @@ final class InspectCommand extends Command
 {
     public const COMMAND_NAME = 'inspect';
 
-    private CodeFormatter $codeFormatter;
+    private readonly CodeFormatter $codeFormatter;
 
-    private Parser $parser;
+    private readonly Parser $parser;
 
-    private RenderNodeInfo $renderNodeInfo;
+    private readonly RenderNodeInfo $renderNodeInfo;
 
     public function __construct()
     {

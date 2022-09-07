@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAstInspector\Console;
 
+use PhpParser\Node\Stmt\Declare_;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -19,11 +20,7 @@ final class IntegrationTest extends TestCase
         self::assertStringContainsString('Hello, world!', $process->getOutput(), $process->getErrorOutput());
 
         // Info section
-        self::assertStringContainsString(
-            'PhpParser\Node\Stmt\Declare_',
-            $process->getOutput(),
-            $process->getErrorOutput()
-        );
+        self::assertStringContainsString(Declare_::class, $process->getOutput(), $process->getErrorOutput());
 
         // Question section
         self::assertStringContainsString('Next?', $process->getOutput(), $process->getErrorOutput());

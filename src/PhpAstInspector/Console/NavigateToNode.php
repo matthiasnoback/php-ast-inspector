@@ -50,7 +50,7 @@ final class NavigateToNode
 
         $outputSection->clear();
 
-        return match($nextAction) {
+        return match ($nextAction) {
             'd' => $navigator->navigateToNextNode(),
             'a' => $navigator->navigateToPreviousNode(),
             'w' => $navigator->navigateToFirstSubnode(),

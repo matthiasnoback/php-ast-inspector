@@ -102,7 +102,7 @@ function main() {
 CODE_SAMPLE
         );
 
-        self::assertSame(['PhpParser\Node\Stmt\Function_'], $navigator->breadcrumbs());
+        self::assertSame([Function_::class], $navigator->breadcrumbs());
 
         $navigator = $navigator->navigateToFirstSubnode();
         self::assertSame([Function_::class, Identifier::class], $navigator->breadcrumbs());

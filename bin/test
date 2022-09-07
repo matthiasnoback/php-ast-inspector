@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
+bin/phpstan
+
 docker compose run --rm php vendor/bin/phpunit "$@"

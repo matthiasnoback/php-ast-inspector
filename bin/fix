@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -eu
+
+docker compose run php vendor/bin/rector
+
+docker compose run php vendor/bin/ecs check --fix
+
+docker compose run php vendor/bin/ecs check --fix

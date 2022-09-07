@@ -18,6 +18,14 @@ jobs:
                         name: "PHPUnit"
                         run: bin/test
 
+                    -
+                        name: "Rector"
+                        run: bin/rector --dry-run
+
+                    -
+                        name: "ECS"
+                        run: bin/ecs
+
         name: ${{ matrix.actions.name }}
         runs-on: ubuntu-latest
 

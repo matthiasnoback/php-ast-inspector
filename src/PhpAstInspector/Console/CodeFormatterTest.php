@@ -31,7 +31,7 @@ CODE_SAMPLE;
 <line_number>2   </line_number>
 <line_number>3   </line_number>echo 'Line 3';
 CODE_SAMPLE
-,
+            ,
             $formatted
         );
     }
@@ -66,7 +66,7 @@ CODE_SAMPLE;
 <line_number> 9  </line_number>echo 'Line 9';
 <line_number>10  </line_number>echo 'Line 10';
 CODE_SAMPLE
-,
+            ,
             $formatted
         );
     }
@@ -87,7 +87,7 @@ CODE_SAMPLE;
 <line_number>2   </line_number>
 <line_number>3   </line_number>echo <highlight>'Line 3'</highlight>;
 CODE_SAMPLE
-,
+            ,
             $formatted
         );
     }
@@ -110,7 +110,7 @@ CODE_SAMPLE;
 <line_number>3   </line_number>echo <highlight>'Line 3';</highlight>
 <line_number>4   </line_number><highlight>echo 'Line 4'</highlight>;
 CODE_SAMPLE
-,
+            ,
             $formatted
         );
     }
