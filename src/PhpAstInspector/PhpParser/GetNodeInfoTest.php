@@ -6,6 +6,8 @@ namespace PhpAstInspector\PhpParser;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Include_;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Use_;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +26,7 @@ CODE_SAMPLE
             [
                 'byRef' => 'false',
                 // boolean: show string equivalent
-                'name' => 'PhpParser\Node\Identifier',
+                'name' => Identifier::class,
                 // object: show class
                 'attrGroups' => '[]',
                 // empty array
@@ -39,7 +41,7 @@ CODE_SAMPLE
 
     public function testItDumpsUseTypes(): void
     {
-        $info = $this->getInfo(new Node\Stmt\Use_([], Use_::TYPE_FUNCTION));
+        $info = $this->getInfo(new Use_([], Use_::TYPE_FUNCTION));
 
         self::assertEquals([
             'type' => 'TYPE_FUNCTION (2)',
@@ -49,13 +51,11 @@ CODE_SAMPLE
 
     public function testItDumpsIncludeTypes(): void
     {
-        $info = (new GetNodeInfo())->forNode(
-            new Node\Expr\Include_(new Node\Scalar\String_('file.php'), Include_::TYPE_REQUIRE)
-        );
+        $info = (new GetNodeInfo())->forNode(new Include_(new String_('file.php'), Include_::TYPE_REQUIRE));
 
         self::assertEquals([
             'type' => 'TYPE_REQUIRE (3)',
-            'expr' => 'PhpParser\Node\Scalar\String_',
+            'expr' => String_::class,
         ], $info);
     }
 

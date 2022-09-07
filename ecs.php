@@ -2,30 +2,14 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symplify\EasyCodingStandard\ValueObject\Option;
+use PhpCsFixer\Fixer\PhpUnit\PhpUnitStrictFixer;
+
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Symplify\EasyCodingStandard\ValueObject\Set\SetList;
 
-return static function (
-    ContainerConfigurator $containerConfigurator
-): void {
-    $parameters = $containerConfigurator->parameters();
-    $parameters->set(
-        Option::PATHS,
-        [
-            __DIR__ . '/src',
-            __DIR__ . '/utils',
-        ]
-    );
-    $parameters->set(
-        Option::SKIP,
-        [
-            PhpCsFixer\Fixer\PhpUnit\PhpUnitStrictFixer::class
-        ]
-    );
+return static function (ECSConfig $config): void {
+    $config->paths([__DIR__ . '/src', __DIR__ . '/utils', __DIR__ . '/rector.php', __DIR__ . '/ecs.php']);
+    $config->skip([PhpUnitStrictFixer::class]);
 
-    $containerConfigurator->import(SetList::CONTROL_STRUCTURES);
-    $containerConfigurator->import(SetList::PSR_12);
-    $containerConfigurator->import(SetList::COMMON);
-    $containerConfigurator->import(SetList::SYMPLIFY);
+    $config->sets([SetList::CONTROL_STRUCTURES, SetList::PSR_12, SetList::COMMON, SetList::SYMPLIFY]);
 };
