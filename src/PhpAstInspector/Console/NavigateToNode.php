@@ -17,6 +17,14 @@ final class NavigateToNode
 {
     public const CHOICE_TAG = 'choice';
 
+    private const NEXT_NODE_KEY = 'd';
+
+    private const PREVIOUS_NODE_KEY = 'a';
+
+    private const PARENT_NODE_KEY = 's';
+
+    private const SUBNODES_KEY = 'w';
+
     /**
      * @var resource
      * @readonly
@@ -45,16 +53,16 @@ final class NavigateToNode
         $choices = [];
 
         if ($navigator->hasNextNode()) {
-            $choices['d'] = '<choice>d</choice> = next node';
+            $choices[self::NEXT_NODE_KEY] = '<choice>' . self::NEXT_NODE_KEY . '</choice> = next node';
         }
         if ($navigator->hasPreviousNode()) {
-            $choices['a'] = '<choice>a</choice> = previous node';
+            $choices[self::PREVIOUS_NODE_KEY] = '<choice>' . self::PREVIOUS_NODE_KEY . '</choice> = previous node';
         }
         if ($navigator->hasParentNode()) {
-            $choices['s'] = '<choice>s</choice> = parent node';
+            $choices[self::PARENT_NODE_KEY] = '<choice>' . self::PARENT_NODE_KEY . '</choice> = parent node';
         }
         if ($navigator->hasSubnode()) {
-            $choices['w'] = '<choice>w</choice> = inspect subnodes';
+            $choices[self::SUBNODES_KEY] = '<choice>' . self::SUBNODES_KEY . '</choice> = inspect subnodes';
         }
 
         $choices[] = '<choice>Ctrl + C</choice> = quit';
@@ -69,10 +77,10 @@ final class NavigateToNode
         $outputSection->clear();
 
         return match ($nextAction) {
-            'd' => $navigator->navigateToNextNode(),
-            'a' => $navigator->navigateToPreviousNode(),
-            'w' => $navigator->navigateToFirstSubnode(),
-            's' => $navigator->navigateToParentNode(),
+            self::NEXT_NODE_KEY => $navigator->navigateToNextNode(),
+            self::PREVIOUS_NODE_KEY => $navigator->navigateToPreviousNode(),
+            self::SUBNODES_KEY => $navigator->navigateToFirstSubnode(),
+            self::PARENT_NODE_KEY => $navigator->navigateToParentNode(),
             default => throw new LogicException('Action not supported: ' . $nextAction),
         };
     }
