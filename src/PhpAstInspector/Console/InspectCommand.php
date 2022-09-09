@@ -50,7 +50,7 @@ final class InspectCommand extends Command
 
         $questionHelper = $this->getHelper('question');
         assert($questionHelper instanceof QuestionHelper);
-        $navigateToNode = new NavigateToNode($questionHelper);
+        $navigateToNode = new NavigateToNode($input);
 
         $this->registerStyles($output);
 
@@ -71,7 +71,7 @@ final class InspectCommand extends Command
         while (true) {
             $this->printCodeWithHighlightedNode($code, $navigator->currentNode(), $codeSection, $infoSection);
 
-            $navigator = $navigateToNode->basedOnUserInput($navigator, $input, $questionSection);
+            $navigator = $navigateToNode->basedOnUserInput($navigator, $questionSection);
         }
     }
 
