@@ -11,7 +11,6 @@ use PhpParser\Node;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -48,8 +47,6 @@ final class InspectCommand extends Command
     {
         assert($output instanceof ConsoleOutputInterface);
 
-        $questionHelper = $this->getHelper('question');
-        assert($questionHelper instanceof QuestionHelper);
         $navigateToNode = new NavigateToNode($input);
 
         $this->registerStyles($output);
